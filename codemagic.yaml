@@ -1,0 +1,23 @@
+workflows:
+  android-workflow:
+    name: Bensalman Mesh APK
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      xcode: latest
+    scripts:
+      - name: Unzip project
+        script: |
+          unzip -o "*.zip" || true
+          if [ -d "bensalman-mesh-complet" ]; then cp -r bensalman-mesh-complet/* . || true; fi
+          if [ -d "bensalman-mesh-complet (1)" ]; then cp -r "bensalman-mesh-complet (1)"/* . || true; fi
+          ls -la
+      - name: Get packages
+        script: |
+          flutter pub get
+      - name: Build APK
+        script: |
+          flutter build apk --release --no-tree-shake-icons
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
