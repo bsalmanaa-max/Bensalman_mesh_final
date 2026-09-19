@@ -1,7 +1,7 @@
 workflows:
   android-apk:
     name: Bensalman APK
-    max_build_duration: 20
+    max_build_duration: 25
     instance_type: mac_mini_m2
     environment:
       flutter: 3.24.5
@@ -10,19 +10,37 @@ workflows:
       - name: Unzip
         script: |
           unzip -o bensalman-mesh-complet.zip
-          ls -la
-      - name: Deps
-        script: |
           PROJECT=$(find . -name "pubspec.yaml" | head -1 | xargs dirname)
           echo "Projet: $PROJECT"
+          echo $PROJECT > /tmp/project_path
+      - name: Fix Gradle & Android
+        script: |
+          PROJECT=$(cat /tmp/project_path)
+          cd $PROJECT
+          echo "Fix dans $PROJECT"
+          # Met Gradle 8.5
+          echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-all.zip" > android/gradle/wrapper/gradle-wrapper.properties
+          # Fix compileSdk et namespace
+          if [ -f android/app/build.gradle ]; then
+            sed -i.bak "s/compileSdkVersion.*/compileSdkVersion 34/" android/app/build.gradle || true
+            sed -i.bak "s/compileSdk .*/compileSdk 34/" android/app/build.gradle || true
+            if ! grep -q "namespace" android/app/build.gradle; then
+              sed -i.bak '/^android {/a\
+              \    namespace "com.bensalman.mesh"
+              ' android/app/build.gradle
+            fi
+          fi
+          cat android/app/build.gradle | head -100
+      - name: Deps
+        script: |
+          PROJECT=$(cat /tmp/project_path)
           cd $PROJECT
           flutter clean
           flutter pub get
-          echo $PROJECT > /tmp/project_path
       - name: Build APK
         script: |
           PROJECT=$(cat /tmp/project_path)
           cd $PROJECT
-          flutter build apk --release --no-tree-shake-icons --verbose
+          flutter build apk --release --no-tree-shake-icons
     artifacts:
       - "**/build/app/outputs/flutter-apk/*.apk"
