@@ -6,10 +6,15 @@ workflows:
       flutter: stable
     scripts:
       - name: Unzip
-        script: unzip -o bensalman-mesh-complet.zip
+        script: |
+          unzip -o bensalman-mesh-complet.zip
       - name: Deps
-        script: cd bensalman-mesh-complet && flutter pub get
-      - name: APK
-        script: cd bensalman-mesh-complet && flutter build apk --release
+        script: |
+          cd bensalman-mesh-complet
+          flutter pub get
+      - name: Build APK
+        script: |
+          cd bensalman-mesh-complet
+          flutter build apk --release
     artifacts:
       - bensalman-mesh-complet/build/app/outputs/flutter-apk/*.apk
