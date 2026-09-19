@@ -2,19 +2,27 @@ workflows:
   android-apk:
     name: Bensalman APK
     max_build_duration: 20
+    instance_type: mac_mini_m2
     environment:
-      flutter: stable
+      flutter: 3.24.5
+      java: 17
     scripts:
       - name: Unzip
         script: |
           unzip -o bensalman-mesh-complet.zip
+          ls -la
       - name: Deps
         script: |
-          cd bensalman-mesh-complet
+          PROJECT=$(find . -name "pubspec.yaml" | head -1 | xargs dirname)
+          echo "Projet: $PROJECT"
+          cd $PROJECT
+          flutter clean
           flutter pub get
+          echo $PROJECT > /tmp/project_path
       - name: Build APK
         script: |
-          cd bensalman-mesh-complet
-          flutter build apk --release
+          PROJECT=$(cat /tmp/project_path)
+          cd $PROJECT
+          flutter build apk --release --no-tree-shake-icons --verbose
     artifacts:
-      - bensalman-mesh-complet/build/app/outputs/flutter-apk/*.apk
+      - "**/build/app/outputs/flutter-apk/*.apk"
